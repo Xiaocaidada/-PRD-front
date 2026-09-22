@@ -1,0 +1,80 @@
+import { createRouter, createWebHistory } from 'vue-router'
+
+const routes = [
+  { path: '/', name: 'landing', component: () => import('../views/landing/Landing.vue') },
+  { path: '/register', name: 'register', component: () => import('../views/auth/Register.vue') },
+  { path: '/login', name: 'login', component: () => import('../views/auth/Login.vue') },
+  { path: '/pay/:id', name: 'pay', component: () => import('../views/merchant/PayPage.vue') },
+
+  {
+    path: '/merchant',
+    component: () => import('../views/merchant/MerchantLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      { path: '', redirect: '/merchant/card' },
+      { path: 'card', name: 'merchantCard', component: () => import('../views/merchant/MerchantCard.vue') },
+      { path: 'materials', name: 'merchantMaterials', component: () => import('../views/merchant/MaterialUpload.vue') },
+      { path: 'stall', name: 'merchantStall', component: () => import('../views/merchant/StallBid.vue') },
+      { path: 'new_stall', name: 'newMerchantStall', component: () => import('../views/merchant/NewStallBid.vue') },
+      { path: 'news', name: 'merchantNews', component: () => import('../views/merchant/ActivityNotice.vue') },
+      { path: 'stats', name: 'merchantStats', component: () => import('../views/merchant/StatsView.vue') },
+      { path: 'edit', name: 'merchantEdit', component: () => import('../views/merchant/MerchantEdit.vue') },
+    ]
+  },
+
+  { path: '/admin/login', name: 'adminLogin', component: () => import('../views/admin/AdminLogin.vue') },
+  {
+    path: '/admin',
+    component: () => import('../views/admin/AdminLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      { path: '', redirect: '/admin/users' },
+      { path: 'users', name: 'adminUsers', component: () => import('../views/admin/UserList.vue') },
+      { path: 'users/:id', name: 'adminUserDetail', component: () => import('../views/admin/UserDetail.vue') },
+      { path: 'stalls', name: 'adminStalls', component: () => import('../views/admin/StallAssign.vue') },
+      { path: 'news', name: 'adminNews', component: () => import('../views/admin/NewsManage.vue') },
+      { path: 'categories', name: 'adminCategories', component: () => import('../views/admin/CategoryManage.vue') },
+      { path: 'navs', name: 'adminNavs', component: () => import('../views/admin/NavManage.vue') },
+      { path: 'banners', name: 'adminBanners', component: () => import('../views/admin/BannerManage.vue') },
+      { path: 'reps', name: 'adminReps', component: () => import('../views/admin/RepManage.vue') },
+      { path: 'partners', name: 'adminPartners', component: () => import('../views/admin/PartnerManage.vue') },
+      { path: 'stats', name: 'adminStats', component: () => import('../views/admin/StatsManage.vue') },
+      { path: 'layout-templates', name: 'adminLayoutTemplates', component: () => import('../views/admin/LayoutTemplateList.vue') },
+      { path: 'layout-editor', name: 'adminLayoutEditor', component: () => import('../views/admin/LayoutTemplateEditor.vue') },
+      { path: 'markets', name: 'adminMarkets', component: () => import('../views/admin/MarketManage.vue') }
+    ]
+  }
+]
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes
+})
+
+router.beforeEach((to) => {
+const target_path = to.path
+
+  if (!to.meta.requiresAuth) {
+    return true
+  }
+
+  if (target_path.startsWith('/admin')) {
+    const admin_token = localStorage.getItem('admin_booth_token')
+    const admin_role = localStorage.getItem("admin_booth_role")
+    if (admin_token && admin_role === "ADMIN") {
+      return true 
+    } else {
+      return { path: "/admin/login" }
+    }
+  }
+
+  const cli_token = localStorage.getItem('booth_token')
+  const cli_role = localStorage.getItem("booth_role")
+  if (cli_token && cli_role === "MERCHANT") {
+    return true
+  }
+  return { path: "/login" }
+})
+
+
+export default router
